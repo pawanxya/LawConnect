@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexPay Gateway - Merchant Operations Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .glow-card {
+      box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.15);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased flex flex-col">
+  
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-500/25">
+          ⚡
+        </div>
+        <div>
+          <span class="font-bold text-base tracking-tight text-white flex items-center gap-2">
+            ApexPay Gateway <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">2D Engine</span>
+          </span>
+        </div>
+      </div>
+
+      <nav class="flex items-center gap-4 text-xs font-medium">
+        <a href="/dashboard" class="text-white bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">Dashboard</a>
+        <a href="/demo-booking" class="text-indigo-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">Test Booking Integration</a>
+        <a href="/docs" class="text-slate-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">API Docs</a>
+        <div class="h-4 w-px bg-slate-800"></div>
+        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-full border border-slate-800">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="text-slate-300 font-mono text-[11px]" id="navMerchant">LawConnect Legal Services</span>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full space-y-8">
+    
+    <!-- Top Welcome Banner & Quick Action -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-indigo-950/60 via-slate-900 to-slate-900 p-6 rounded-3xl border border-indigo-900/40 glow-card">
+      <div>
+        <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+          Merchant Gateway Center
+          <span class="text-xs font-normal text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-0.5 rounded-full">
+            ● Acquirer Switch Live
+          </span>
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">Accept high-speed 2D card payments, UPI collect, and NetBanking with instant webhooks.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="initQuickPayment()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+          <i class="fa-solid fa-plus text-[10px]"></i> Create Test Order
+        </button>
+        <button onclick="refreshData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs px-3 py-2.5 rounded-xl border border-slate-700 transition-all flex items-center gap-1.5">
+          <i class="fa-solid fa-rotate-right text-[11px]"></i> Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Balance -->
+      <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Settled Balance</span>
+          <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 text-sm"><i class="fa-solid fa-wallet"></i></span>
+        </div>
+        <div class="mt-3">
+          <span class="text-3xl font-extrabold text-white" id="statBalance">₹0.00</span>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
+          <i class="fa-solid fa-check text-emerald-400"></i> Available for T+1 payout
+        </p>
+      </div>
+
+      <!-- Volume -->
+      <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Processed Volume</span>
+          <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 text-sm"><i class="fa-solid fa-chart-line"></i></span>
+        </div>
+        <div class="mt-3">
+          <span class="text-3xl font-extrabold text-white" id="statVolume">₹0.00</span>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-2">Gross cumulative sales</p>
+      </div>
+
+      <!-- Total Transactions -->
+      <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Orders</span>
+          <span class="p-2 rounded-xl bg-violet-500/10 text-violet-400 text-sm"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+        </div>
+        <div class="mt-3">
+          <span class="text-3xl font-extrabold text-white" id="statTxnCount">0</span>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-2">Across all payment channels</p>
+      </div>
+
+      <!-- 2D Approval Rate -->
+      <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">2D Authorization Rate</span>
+          <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400 text-sm"><i class="fa-solid fa-bolt"></i></span>
+        </div>
+        <div class="mt-3">
+          <span class="text-3xl font-extrabold text-emerald-400" id="statRate">100%</span>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
+          <i class="fa-solid fa-bolt text-indigo-400"></i> Zero 3DS drop-off rate
+        </p>
+      </div>
+    </div>
+
+    <!-- API Keys & Integration Settings Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- API Credentials Box -->
+      <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-3xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-key text-indigo-400"></i> Merchant API Credentials
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Use these keys to connect your booking backend & frontend checkout.</p>
+          </div>
+          <button onclick="rotateKeys()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1">
+            <i class="fa-solid fa-arrows-rotate"></i> Rotate Keys
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Public Key -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Public Key (Frontend / Checkout Embed)</label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="apiKeyInput" readonly
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs font-mono text-indigo-300 select-all outline-none">
+              <button onclick="copyToClipboard('apiKeyInput')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 flex items-center gap-1">
+                <i class="fa-regular fa-copy"></i> Copy
+              </button>
+            </div>
+          </div>
+
+          <!-- Secret Key -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Secret Key (Server-to-Server Backend Only)</label>
+            <div class="flex items-center gap-2">
+              <input type="password" id="apiSecretInput" readonly
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs font-mono text-emerald-300 select-all outline-none">
+              <button onclick="toggleSecretVisibility()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium border border-slate-700">
+                <i class="fa-regular fa-eye" id="secretEye"></i>
+              </button>
+              <button onclick="copyToClipboard('apiSecretInput')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 flex items-center gap-1">
+                <i class="fa-regular fa-copy"></i> Copy
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Webhook Configuration -->
+        <div class="mt-6 pt-5 border-t border-slate-800">
+          <label class="block text-xs font-medium text-slate-400 mb-1.5 flex items-center justify-between">
+            <span>Webhook Notification URL (Receives instant <code class="text-indigo-300 font-mono">payment.captured</code> events)</span>
+            <span class="text-[11px] text-emerald-400 flex items-center gap-1">
+              <i class="fa-solid fa-lock text-[10px]"></i> HMAC-SHA256 Signed
+            </span>
+          </label>
+          <div class="flex items-center gap-2">
+            <input type="text" id="webhookUrlInput"
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs font-mono text-slate-300 outline-none focus:border-indigo-500">
+            <button onclick="saveWebhookUrl()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-medium shadow-md shadow-indigo-600/20">
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Cards Reference Card -->
+      <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-vial text-amber-400"></i> 2D Simulation Test Matrix
+          </h2>
+          <p class="text-xs text-slate-400 mb-4">Simulate edge-cases directly in your test bookings:</p>
+
+          <div class="space-y-2 text-xs font-mono">
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="text-indigo-300">4111 1111 1111 1111</span>
+                <p class="text-[10px] text-slate-500 font-sans">Expiry: Any future | CVV: Any</p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                APPROVED (2D Direct)
+              </span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="text-slate-300">4000 0000 0000 0002</span>
+                <p class="text-[10px] text-slate-500 font-sans">Insufficient balance test</p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                DECLINED (Code 51)
+              </span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="text-slate-300">4000 0000 0000 0004</span>
+                <p class="text-[10px] text-slate-500 font-sans">Fraud / Risk score block</p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                BLOCKED (Code 59)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+          <span>UPI Instant Simulator:</span>
+          <span class="text-indigo-400 font-mono">user@okaxis</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Transactions Ledger -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-indigo-400"></i> Live Gateway Transaction Ledger
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Real-time status of orders processed through the 2D switch</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="text" id="tableSearch" oninput="filterTable()" placeholder="Search Txn ID / Booking ID..."
+            class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-1.5 text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-indigo-500">
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 font-medium">
+              <th class="pb-3 px-3">Transaction ID</th>
+              <th class="pb-3 px-3">Booking ID</th>
+              <th class="pb-3 px-3">Customer</th>
+              <th class="pb-3 px-3">Method & Brand</th>
+              <th class="pb-3 px-3">Amount</th>
+              <th class="pb-3 px-3">Status</th>
+              <th class="pb-3 px-3">Auth / UTR</th>
+              <th class="pb-3 px-3">Timestamp</th>
+              <th class="pb-3 px-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="txnsTableBody" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+            <tr>
+              <td colspan="9" class="py-8 text-center text-slate-500 font-sans">
+                Loading transactions...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Webhook Event Logs -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-satellite-dish text-indigo-400"></i> Webhook Event Dispatcher Log
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Asynchronous HTTP postbacks delivered to merchant server</p>
+        </div>
+      </div>
+
+      <div class="space-y-2" id="webhookLogsContainer">
+        <p class="text-xs text-slate-500 py-4 text-center">No webhook events logged yet.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Quick Order Creation Modal -->
+  <div id="quickOrderModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-white text-base">Create Fast Test Order</h3>
+        <button onclick="closeQuickOrder()" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Booking Reference</label>
+          <input type="text" id="qoBookingId" value="BK_DEMO_9981" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Amount (INR)</label>
+          <input type="number" id="qoAmount" value="2500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Customer Name</label>
+          <input type="text" id="qoCustomerName" value="Pankaj Sharma" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Customer Email</label>
+          <input type="email" id="qoCustomerEmail" value="pankaj@example.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 outline-none">
+        </div>
+      </div>
+
+      <div class="mt-6 flex gap-2">
+        <button onclick="submitQuickOrder()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-xs transition-colors">
+          Create & Open Checkout
+        </button>
+        <button onclick="closeQuickOrder()" class="bg-slate-800 text-slate-400 px-4 py-2.5 rounded-xl text-xs">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let cachedTransactions = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshData();
+      setInterval(refreshData, 5000); // Poll every 5s for live updates
+    });
+
+    async function refreshData() {
+      try {
+        const [profileRes, txnsRes, webhooksRes] = await Promise.all([
+          fetch('/api/v1/merchant/profile'),
+          fetch('/api/v1/merchant/transactions'),
+          fetch('/api/v1/merchant/webhooks')
+        ]);
+
+        const profileData = await profileRes.json();
+        const txnsData = await txnsRes.json();
+        const webhooksData = await webhooksRes.json();
+
+        if (profileData.success) {
+          const m = profileData.merchant;
+          const s = profileData.stats;
+          document.getElementById('navMerchant').textContent = m.name;
+          document.getElementById('statBalance').textContent = '₹' + Number(m.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+          document.getElementById('statVolume').textContent = '₹' + Number(s.totalVolume || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+          document.getElementById('statTxnCount').textContent = s.totalCount;
+          document.getElementById('statRate').textContent = s.successRate + '%';
+
+          document.getElementById('apiKeyInput').value = m.apiKey;
+          document.getElementById('apiSecretInput').value = m.apiSecret;
+          document.getElementById('webhookUrlInput').value = m.webhookUrl || '';
+        }
+
+        if (txnsData.success) {
+          cachedTransactions = txnsData.transactions;
+          renderTransactions(cachedTransactions);
+        }
+
+        if (webhooksData.success) {
+          renderWebhooks(webhooksData.webhooks);
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+      }
+    }
+
+    function renderTransactions(txns) {
+      const tbody = document.getElementById('txnsTableBody');
+      if (!txns || txns.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500 font-sans">No transactions recorded yet. Run a test payment to see it here!</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = txns.map(t => {
+        let statusBadge = '';
+        if (t.status === 'APPROVED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">APPROVED</span>';
+        } else if (t.status === 'REFUNDED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">REFUNDED</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">DECLINED</span>';
+        }
+
+        const dateStr = new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        return `
+          <tr class="hover:bg-slate-900/50 transition-colors">
+            <td class="py-3 px-3 font-semibold text-slate-200">${t.id}</td>
+            <td class="py-3 px-3 text-indigo-400">${t.bookingId}</td>
+            <td class="py-3 px-3 font-sans text-slate-300">${t.customer?.name || 'Customer'}</td>
+            <td class="py-3 px-3 font-sans text-slate-400">
+              <span class="text-slate-200 font-mono text-[11px]">${t.cardBrand || t.paymentMethod}</span>
+              <span class="text-[10px] text-slate-500 block">${t.cardMasked || ''}</span>
+            </td>
+            <td class="py-3 px-3 font-bold text-white">₹${Number(t.amount).toLocaleString()}</td>
+            <td class="py-3 px-3">${statusBadge}</td>
+            <td class="py-3 px-3 text-[11px] text-slate-400">${t.authCode || t.utr || '-'}</td>
+            <td class="py-3 px-3 text-slate-500 text-[11px] font-sans">${dateStr}</td>
+            <td class="py-3 px-3 text-right">
+              ${t.status === 'APPROVED' ? `
+                <button onclick="refundTxn('${t.id}')" class="text-[11px] text-indigo-400 hover:text-indigo-300 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                  Refund
+                </button>
+              ` : '-'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderWebhooks(webhooks) {
+      const container = document.getElementById('webhookLogsContainer');
+      if (!webhooks || webhooks.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 py-3 text-center">No webhook events logged yet.</p>';
+        return;
+      }
+
+      container.innerHTML = webhooks.slice(0, 5).map(w => {
+        const isOk = w.status === 'DELIVERED';
+        const badge = isOk
+          ? '<span class="text-emerald-400 text-[10px] font-bold bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">HTTP 200 DELIVERED</span>'
+          : '<span class="text-red-400 text-[10px] font-bold bg-red-500/20 px-2 py-0.5 rounded border border-red-500/30">FAILED</span>';
+
+        return `
+          <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-3">
+              <span class="w-2 h-2 rounded-full ${isOk ? 'bg-emerald-400' : 'bg-red-400'}"></span>
+              <div>
+                <span class="font-mono text-indigo-400 font-semibold">${w.event}</span>
+                <span class="text-slate-500 text-[11px] ml-2 font-mono">→ ${w.targetUrl}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-slate-500 text-[11px] font-mono">Sig: ${w.signature ? w.signature.slice(0, 12) + '...' : 'none'}</span>
+              ${badge}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterTable() {
+      const q = document.getElementById('tableSearch').value.toLowerCase();
+      const filtered = cachedTransactions.filter(t =>
+        t.id.toLowerCase().includes(q) ||
+        (t.bookingId && t.bookingId.toLowerCase().includes(q)) ||
+        (t.customer?.name && t.customer.name.toLowerCase().includes(q))
+      );
+      renderTransactions(filtered);
+    }
+
+    async function rotateKeys() {
+      if (!confirm('Are you sure you want to rotate your API Keys?')) return;
+      const res = await fetch('/api/v1/merchant/keys/rotate', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('apiKeyInput').value = data.apiKey;
+        document.getElementById('apiSecretInput').value = data.apiSecret;
+        alert('API keys regenerated successfully!');
+      }
+    }
+
+    async function saveWebhookUrl() {
+      const webhookUrl = document.getElementById('webhookUrlInput').value;
+      const res = await fetch('/api/v1/merchant/webhook-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webhookUrl })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Webhook URL updated to: ' + data.webhookUrl);
+      }
+    }
+
+    async function refundTxn(id) {
+      if (!confirm(`Process 100% refund for transaction ${id}?`)) return;
+      const res = await fetch('/api/v1/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionId: id, reason: 'Customer requested refund' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Refund approved successfully!');
+        refreshData();
+      } else {
+        alert('Refund failed: ' + data.message);
+      }
+    }
+
+    function toggleSecretVisibility() {
+      const input = document.getElementById('apiSecretInput');
+      const eye = document.getElementById('secretEye');
+      if (input.type === 'password') {
+        input.type = 'text';
+        eye.className = 'fa-regular fa-eye-slash';
+      } else {
+        input.type = 'password';
+        eye.className = 'fa-regular fa-eye';
+      }
+    }
+
+    function copyToClipboard(inputId) {
+      const val = document.getElementById(inputId).value;
+      navigator.clipboard.writeText(val);
+      alert('Copied to clipboard!');
+    }
+
+    function initQuickPayment() {
+      document.getElementById('quickOrderModal').classList.remove('hidden');
+      document.getElementById('quickOrderModal').classList.add('flex');
+    }
+
+    function closeQuickOrder() {
+      document.getElementById('quickOrderModal').classList.add('hidden');
+      document.getElementById('quickOrderModal').classList.remove('flex');
+    }
+
+    async function submitQuickOrder() {
+      const bookingId = document.getElementById('qoBookingId').value;
+      const amount = document.getElementById('qoAmount').value;
+      const name = document.getElementById('qoCustomerName').value;
+      const email = document.getElementById('qoCustomerEmail').value;
+
+      const res = await fetch('/api/v1/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Api-Key': document.getElementById('apiKeyInput').value
+        },
+        body: JSON.stringify({
+          bookingId,
+          amount,
+          currency: 'INR',
+          customer: { name, email },
+          notes: 'Direct Test Consultation'
+        })
+      });
+
+      const data = await res.json();
+      if (data.success && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        alert('Error creating order: ' + data.message);
+      }
+    }
+  </script>
+</body>
+</html>

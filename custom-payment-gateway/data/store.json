@@ -1,0 +1,135 @@
+{
+  "merchants": [
+    {
+      "id": "mer_lawconnect_01",
+      "name": "LawConnect Legal Services",
+      "email": "billing@lawconnect.in",
+      "apiKey": "pk_live_apex_9381lawconnect_pub",
+      "apiSecret": "sk_live_apex_4729lawconnect_sec_token",
+      "webhookUrl": "http://localhost:5050/api/v1/demo-webhook-receiver",
+      "currency": "INR",
+      "balance": 48000,
+      "status": "active",
+      "createdAt": "2026-11-07T09:31:59.692Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord_2263a50a-1864-4e",
+      "merchantId": "mer_lawconnect_01",
+      "merchantName": "LawConnect Legal Services",
+      "amount": 2500,
+      "currency": "INR",
+      "bookingId": "BK_DEMO_9981",
+      "customer": {
+        "name": "Pankaj Sharma",
+        "email": "pankaj@example.com",
+        "phone": ""
+      },
+      "notes": "Direct Test Consultation",
+      "returnUrl": "http://localhost:5050/demo-booking",
+      "status": "PENDING",
+      "checkoutUrl": "http://localhost:5050/checkout?orderId=ord_2263a50a-1864-4e",
+      "createdAt": "2026-11-07T12:35:47.849Z"
+    },
+    {
+      "id": "ord_da73a6f8-364a-4b",
+      "merchantId": "mer_lawconnect_01",
+      "merchantName": "LawConnect Legal Services",
+      "amount": 1500,
+      "currency": "INR",
+      "bookingId": "BK_LAW_14091",
+      "customer": {
+        "name": "Pankaj Sharma",
+        "email": "pankaj@example.com",
+        "phone": "+91 98765 43210"
+      },
+      "notes": "Property Dispute Review",
+      "returnUrl": "http://localhost:5050/demo-booking",
+      "status": "PAID",
+      "checkoutUrl": "http://localhost:5050/checkout?orderId=ord_da73a6f8-364a-4b",
+      "createdAt": "2026-11-07T12:30:10.785Z",
+      "transactionId": "txn_a4532963-f27a-47",
+      "paymentMethod": "card",
+      "updatedAt": "2026-11-07T12:30:13.688Z"
+    },
+    {
+      "id": "ord_test_99",
+      "bookingId": "BK_1",
+      "amount": 1500,
+      "status": "PENDING"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "txn_a4532963-f27a-47",
+      "orderId": "ord_da73a6f8-364a-4b",
+      "merchantId": "mer_lawconnect_01",
+      "merchantName": "LawConnect Legal Services",
+      "bookingId": "BK_LAW_14091",
+      "amount": 1500,
+      "currency": "INR",
+      "customer": {
+        "name": "Pankaj Sharma",
+        "email": "pankaj@example.com",
+        "phone": "+91 98765 43210"
+      },
+      "paymentMethod": "card",
+      "cardBrand": "Visa",
+      "cardMasked": "411111******1111",
+      "status": "APPROVED",
+      "responseCode": "00",
+      "message": "Transaction Authorized Successfully (2D Direct Post)",
+      "authCode": "AUTH868755",
+      "arn": "ARN17940546136863985",
+      "rrn": "RRN265246606968",
+      "utr": null,
+      "threeDsBypassed": true,
+      "gatewayType": "2D_DIRECT_SWITCH",
+      "declineReason": null,
+      "createdAt": "2026-11-07T12:30:13.686Z"
+    },
+    {
+      "id": "txn_test_99",
+      "merchantId": "mer_lawconnect_01",
+      "amount": 1500,
+      "status": "APPROVED",
+      "bookingId": "BK_1"
+    }
+  ],
+  "webhooks": [
+    {
+      "id": "evt_964e5f9e-9ec",
+      "merchantId": "mer_lawconnect_01",
+      "event": "payment.captured",
+      "targetUrl": "http://localhost:5050/api/v1/demo-webhook-receiver",
+      "payload": {
+        "id": "evt_964e5f9e-9ec",
+        "event": "payment.captured",
+        "created_at": "2026-11-07T12:30:13.689Z",
+        "data": {
+          "transactionId": "txn_a4532963-f27a-47",
+          "orderId": "ord_da73a6f8-364a-4b",
+          "bookingId": "BK_LAW_14091",
+          "amount": 1500,
+          "currency": "INR",
+          "status": "APPROVED",
+          "customer": {
+            "name": "Pankaj Sharma",
+            "email": "pankaj@example.com",
+            "phone": "+91 98765 43210"
+          },
+          "authCode": "AUTH868755",
+          "timestamp": "2026-11-07T12:30:13.686Z"
+        }
+      },
+      "signature": "8940d0c31629936e4fdb5108552f8d9b3b50b3e37a83c700955573d2f6c711b2",
+      "timestamp": 1794054613,
+      "status": "DELIVERED",
+      "attempts": 1,
+      "createdAt": "2026-11-07T12:30:13.690Z",
+      "responseCode": 200,
+      "responseText": "{\n  \"received\": true,\n  \"verified\": true,\n  \"event\": \"payment.captured\",\n  \"bookingUpdated\": \"BK_LAW_14091\",\n  \"message\": \"Client booking status marked as CONFIRMED via webhook\"\n}"
+    }
+  ]
+}

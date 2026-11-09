@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexPay 2D Gateway - Developer API Documentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased flex flex-col">
+  
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/dashboard" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+          ⚡
+        </a>
+        <span class="font-bold text-base text-white">ApexPay Integration Docs</span>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs font-medium">
+        <a href="/dashboard" class="text-slate-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors">Merchant Dashboard</a>
+        <a href="/demo-booking" class="text-indigo-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors">Client Booking Demo</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-10 flex-1 w-full space-y-10">
+    
+    <!-- Title -->
+    <div>
+      <span class="text-xs uppercase tracking-widest font-bold text-indigo-400 bg-indigo-950 px-3 py-1 rounded-full border border-indigo-800">
+        Developer Guide
+      </span>
+      <h1 class="text-3xl font-extrabold text-white mt-3">2D Payment Gateway API Integration</h1>
+      <p class="text-sm text-slate-400 mt-2 max-w-3xl leading-relaxed">
+        Connect your booking application, SaaS, or e-commerce platform to ApexPay. You can use either 
+        <strong class="text-slate-200">Hosted 2D Checkout</strong> (customer is redirected to a pre-built secure page) or 
+        <strong class="text-slate-200">Headless 2D Direct Post</strong> (seamless server-to-server card authorization with zero OTP challenge).
+      </p>
+    </div>
+
+    <!-- Step 1: Create Order -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-indigo-600/30 text-indigo-400 font-bold text-xs flex items-center justify-center border border-indigo-500/40">1</span>
+        <div>
+          <h2 class="text-lg font-bold text-white">Create a Payment Order</h2>
+          <span class="text-xs font-mono text-emerald-400 font-semibold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">POST /api/v1/orders/create</span>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-400">
+        When a customer selects a booking slot or service on your website, your backend calls this endpoint to generate a payment session.
+      </p>
+
+      <!-- Code Snippet Tabs -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="bg-slate-900/60 px-4 py-2 border-b border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+          <span>Node.js / Express</span>
+          <span class="text-slate-500">JSON Payload</span>
+        </div>
+        <pre class="p-4 text-xs font-mono text-indigo-300 overflow-x-auto leading-relaxed"><code>const axios = require('axios');
+
+async function initiateBookingPayment(booking) {
+  const response = await axios.post('http://localhost:5050/api/v1/orders/create', {
+    amount: booking.fee, // e.g. 1500
+    currency: 'INR',
+    bookingId: booking.id, // e.g. 'BK_LAW_74921'
+    customer: {
+      name: booking.clientName,
+      email: booking.clientEmail,
+      phone: booking.clientPhone
+    },
+    notes: 'Consultation with Advocate Vikram',
+    returnUrl: 'https://yoursite.com/booking/verify'
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Api-Key': 'pk_live_apex_9381lawconnect_pub'
+    }
+  });
+
+  // Redirect client to checkoutUrl
+  return response.data.checkoutUrl;
+}</code></pre>
+      </div>
+    </div>
+
+    <!-- Step 2: Direct 2D API (Headless) -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-indigo-600/30 text-indigo-400 font-bold text-xs flex items-center justify-center border border-indigo-500/40">2</span>
+        <div>
+          <h2 class="text-lg font-bold text-white">Direct 2D Card Charge (Zero OTP Redirect)</h2>
+          <span class="text-xs font-mono text-amber-400 font-semibold bg-amber-950 px-2 py-0.5 rounded border border-amber-800">POST /api/v1/charge/direct-2d</span>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-400">
+        If you want full custom UI on your booking page, submit the card details directly to this endpoint. The gateway immediately returns authorization status without 3DS OTP interruption.
+      </p>
+
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="bg-slate-900/60 px-4 py-2 border-b border-slate-800 text-[11px] font-mono text-slate-400">
+          <span>cURL Request</span>
+        </div>
+        <pre class="p-4 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed"><code>curl -X POST http://localhost:5050/api/v1/charge/direct-2d \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: pk_live_apex_9381lawconnect_pub" \
+  -d '{
+    "amount": 1500,
+    "currency": "INR",
+    "bookingId": "BK_LAW_74921",
+    "paymentMethod": "card",
+    "cardNumber": "4111111111111111",
+    "cardExpiry": "12/28",
+    "cardCvv": "892",
+    "cardHolderName": "Pankaj Sharma"
+  }'</code></pre>
+      </div>
+    </div>
+
+    <!-- Step 3: Webhooks -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-indigo-600/30 text-indigo-400 font-bold text-xs flex items-center justify-center border border-indigo-500/40">3</span>
+        <div>
+          <h2 class="text-lg font-bold text-white">Handling Real-time Webhooks</h2>
+          <span class="text-xs font-mono text-violet-400 font-semibold bg-violet-950 px-2 py-0.5 rounded border border-violet-800">Webhook Receiver</span>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-400">
+        ApexPay fires an HTTP POST to your configured Webhook URL with HMAC-SHA256 signature in the <code class="text-indigo-300">X-Gateway-Signature</code> header.
+      </p>
+
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="bg-slate-900/60 px-4 py-2 border-b border-slate-800 text-[11px] font-mono text-slate-400">
+          <span>Node.js Webhook Receiver & Verification</span>
+        </div>
+        <pre class="p-4 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed"><code>const crypto = require('crypto');
+
+app.post('/api/webhook', (req, res) => {
+  const signature = req.headers['x-gateway-signature'];
+  const timestamp = req.headers['x-gateway-timestamp'];
+  const secret = process.env.GATEWAY_SECRET_KEY;
+
+  // Verify HMAC-SHA256 signature
+  const expectedSig = crypto
+    .createHmac('sha256', secret)
+    .update(`${timestamp}.${JSON.stringify(req.body)}`)
+    .digest('hex');
+
+  if (signature !== expectedSig) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  const { event, data } = req.body;
+  if (event === 'payment.captured') {
+    // Confirm booking in your database!
+    await markBookingPaid(data.bookingId, data.transactionId);
+  }
+
+  res.status(200).json({ received: true });
+});</code></pre>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+    ApexPay Gateway • Developer Documentation
+  </footer>
+</body>
+</html>

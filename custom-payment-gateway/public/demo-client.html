@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LawConnect - Book Lawyer Consultation (Gateway Demo)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen antialiased flex flex-col justify-between">
+  
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+          ⚖️
+        </div>
+        <div>
+          <span class="font-bold text-base tracking-tight text-white">LawConnect Portal</span>
+          <span class="text-[10px] text-slate-400 block -mt-0.5">Client Booking Simulation</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs">
+        <a href="/dashboard" class="text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1.5 bg-indigo-950/50 px-3 py-1.5 rounded-lg border border-indigo-800/60">
+          <i class="fa-solid fa-arrow-left"></i> Open Gateway Dashboard
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Booking Interface -->
+  <main class="max-w-5xl mx-auto px-6 py-10 w-full">
+    
+    <div id="bookingSection" class="space-y-8">
+      <!-- Title -->
+      <div class="text-center max-w-2xl mx-auto">
+        <span class="text-xs uppercase tracking-widest font-semibold text-blue-400 bg-blue-950 px-3 py-1 rounded-full border border-blue-800">
+          Integrated with ApexPay 2D Gateway
+        </span>
+        <h1 class="text-3xl font-extrabold text-white mt-3">Book Legal Consultation</h1>
+        <p class="text-xs text-slate-400 mt-2">
+          Demonstration of how any client website takes booking details and processes payments seamlessly using your custom 2D payment gateway.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <!-- Left: Consultation & Lawyer Card -->
+        <div class="md:col-span-5 space-y-4">
+          <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-2xl shadow-lg">
+                👨‍⚖️
+              </div>
+              <div>
+                <h3 class="font-bold text-base text-white">Advocate Vikram Malhotra</h3>
+                <p class="text-xs text-blue-400">Senior Corporate & Civil Counsel</p>
+                <div class="flex items-center gap-1 text-[11px] text-amber-400 mt-1">
+                  <i class="fa-solid fa-star"></i>
+                  <i class="fa-solid fa-star"></i>
+                  <i class="fa-solid fa-star"></i>
+                  <i class="fa-solid fa-star"></i>
+                  <i class="fa-solid fa-star-half-stroke"></i>
+                  <span class="text-slate-400 ml-1">4.9 (124 reviews)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 pt-5 border-t border-slate-800 space-y-3 text-xs text-slate-300">
+              <div class="flex justify-between">
+                <span class="text-slate-400">Consultation Type:</span>
+                <span class="font-medium text-white">1-on-1 Video Consultation (45 min)</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Selected Date:</span>
+                <span class="font-medium text-white" id="bookingDate">Today, 4:00 PM</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Booking Fee:</span>
+                <span class="font-bold text-emerald-400 text-sm">₹1,500.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gateway Benefits Badge -->
+          <div class="bg-indigo-950/40 border border-indigo-800/40 rounded-2xl p-4 text-xs text-indigo-300 space-y-1.5">
+            <div class="flex items-center gap-2 font-semibold text-white">
+              <i class="fa-solid fa-bolt text-amber-400"></i> Why Custom 2D Gateway?
+            </div>
+            <p class="text-[11px] text-indigo-300/80 leading-relaxed">
+              Eliminates bank OTP redirection drops, increases conversion by 35%, and instantly triggers real-time webhooks to confirm client slots.
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: Client Details Form & Gateway Trigger -->
+        <div class="md:col-span-7 bg-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-5">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2 pb-3 border-b border-slate-800">
+            <i class="fa-regular fa-id-card text-blue-400"></i> Client Details for Booking
+          </h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label class="block font-medium text-slate-400 mb-1.5">Client Full Name</label>
+              <input type="text" id="clientName" value="Pankaj Sharma"
+                class="w-full bg-slate-900 border border-slate-800 focus:border-blue-500 rounded-xl px-4 py-2.5 text-slate-100 outline-none">
+            </div>
+            <div>
+              <label class="block font-medium text-slate-400 mb-1.5">Email Address</label>
+              <input type="email" id="clientEmail" value="pankaj@example.com"
+                class="w-full bg-slate-900 border border-slate-800 focus:border-blue-500 rounded-xl px-4 py-2.5 text-slate-100 outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label class="block font-medium text-slate-400 mb-1.5">Phone Number</label>
+              <input type="tel" id="clientPhone" value="+91 98765 43210"
+                class="w-full bg-slate-900 border border-slate-800 focus:border-blue-500 rounded-xl px-4 py-2.5 text-slate-100 outline-none">
+            </div>
+            <div>
+              <label class="block font-medium text-slate-400 mb-1.5">Case Category</label>
+              <select id="caseCategory" class="w-full bg-slate-900 border border-slate-800 focus:border-blue-500 rounded-xl px-4 py-2.5 text-slate-100 outline-none">
+                <option>Property Dispute Review</option>
+                <option>Commercial Contract Agreement</option>
+                <option>Corporate Compliance</option>
+                <option>General Legal Advice</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Checkout Mode Selection -->
+          <div class="pt-2">
+            <label class="block text-xs font-semibold text-slate-300 mb-2">Choose Gateway Integration Flow:</label>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <label class="p-3 rounded-2xl border border-blue-500/40 bg-blue-950/20 cursor-pointer flex items-start gap-2.5">
+                <input type="radio" name="flowMode" value="hosted" checked class="mt-0.5 text-blue-600">
+                <div>
+                  <span class="font-semibold text-white block">1. Hosted 2D Checkout</span>
+                  <span class="text-[10px] text-slate-400">Redirects to Gateway UI (Cards, UPI, NetBanking)</span>
+                </div>
+              </label>
+
+              <label class="p-3 rounded-2xl border border-slate-800 bg-slate-900/60 cursor-pointer flex items-start gap-2.5">
+                <input type="radio" name="flowMode" value="direct" class="mt-0.5 text-blue-600">
+                <div>
+                  <span class="font-semibold text-white block">2. In-Page 2D Direct Post</span>
+                  <span class="text-[10px] text-slate-400">Headless API charge directly without redirect</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Direct Post Hidden Inputs (Shown when Option 2 is selected) -->
+          <div id="directPostBox" class="hidden bg-slate-900/90 border border-slate-800 p-4 rounded-2xl space-y-3 text-xs">
+            <span class="font-semibold text-amber-400 block text-[11px]"><i class="fa-solid fa-code"></i> Direct Card Inputs (Embedded Headless):</span>
+            <div class="grid grid-cols-3 gap-2">
+              <input type="text" id="directCardNum" value="4111 1111 1111 1111" class="col-span-2 bg-slate-950 border border-slate-800 rounded-lg p-2 font-mono text-[11px]">
+              <input type="text" id="directCardCvv" value="921" class="bg-slate-950 border border-slate-800 rounded-lg p-2 font-mono text-[11px]" placeholder="CVV">
+            </div>
+          </div>
+
+          <!-- Pay & Book Button -->
+          <button id="bookBtn" onclick="initiateBooking()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-xl shadow-blue-600/25 transition-all flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-lock text-xs"></i>
+            <span id="btnLabel">Proceed to Pay ₹1,500 via ApexPay</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking Confirmation Receipt (Shown after successful return) -->
+    <div id="confirmationCard" class="hidden max-w-xl mx-auto bg-slate-950 border border-emerald-500/30 rounded-3xl p-8 shadow-2xl text-center space-y-6">
+      <div class="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-4xl mx-auto border-2 border-emerald-500/40">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+
+      <div>
+        <span class="text-xs uppercase tracking-widest font-bold text-emerald-400">Payment & Slot Confirmed</span>
+        <h2 class="text-2xl font-bold text-white mt-1">Consultation Booked Successfully!</h2>
+        <p class="text-xs text-slate-400 mt-1">A confirmation email and consultation link have been sent.</p>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 text-left text-xs font-mono space-y-2.5">
+        <div class="flex justify-between">
+          <span class="text-slate-400 font-sans">Booking Reference:</span>
+          <span class="text-indigo-400 font-bold" id="rcptBookingId">BK_LAW_74921</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400 font-sans">Gateway Txn ID:</span>
+          <span class="text-white font-bold" id="rcptTxnId">txn_9829103982</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400 font-sans">Amount Paid:</span>
+          <span class="text-emerald-400 font-bold">₹1,500.00</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400 font-sans">Authorization Switch:</span>
+          <span class="text-slate-300">2D Direct Settlement</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400 font-sans">Lawyer:</span>
+          <span class="text-slate-200 font-sans">Advocate Vikram Malhotra</span>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <a href="/demo-booking" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-3 rounded-xl text-xs font-medium transition-colors">
+          Book Another Consultation
+        </a>
+        <a href="/dashboard" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl text-xs font-medium transition-colors">
+          View in Gateway Dashboard
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+    LawConnect Client Simulation • Powered by ApexPay White-Label Payment Engine
+  </footer>
+
+  <script>
+    // Check if returned with success params
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const status = params.get('status');
+      const bookingId = params.get('bookingId');
+      const txnId = params.get('txnId');
+
+      if (status === 'success') {
+        document.getElementById('bookingSection').classList.add('hidden');
+        document.getElementById('confirmationCard').classList.remove('hidden');
+        if (bookingId) document.getElementById('rcptBookingId').textContent = bookingId;
+        if (txnId) document.getElementById('rcptTxnId').textContent = txnId;
+      }
+
+      // Handle radio changes
+      document.querySelectorAll('input[name="flowMode"]').forEach(r => {
+        r.addEventListener('change', (e) => {
+          const directBox = document.getElementById('directPostBox');
+          const btnLabel = document.getElementById('btnLabel');
+          if (e.target.value === 'direct') {
+            directBox.classList.remove('hidden');
+            btnLabel.textContent = 'Authorize 2D Direct Charge (₹1,500)';
+          } else {
+            directBox.classList.add('hidden');
+            btnLabel.textContent = 'Proceed to Pay ₹1,500 via ApexPay';
+          }
+        });
+      });
+    });
+
+    async function initiateBooking() {
+      const name = document.getElementById('clientName').value;
+      const email = document.getElementById('clientEmail').value;
+      const phone = document.getElementById('clientPhone').value;
+      const category = document.getElementById('caseCategory').value;
+      const flow = document.querySelector('input[name="flowMode"]:checked').value;
+      const bookingId = 'BK_LAW_' + Math.floor(10000 + Math.random() * 90000);
+
+      const btn = document.getElementById('bookBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Contacting Payment Gateway...';
+
+      if (flow === 'hosted') {
+        // Step 1: Client backend calls Gateway POST /api/v1/orders/create
+        try {
+          const res = await fetch('/api/v1/orders/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId,
+              amount: 1500,
+              currency: 'INR',
+              customer: { name, email, phone },
+              notes: category,
+              returnUrl: window.location.origin + '/demo-booking'
+            })
+          });
+
+          const data = await res.json();
+          if (data.success && data.checkoutUrl) {
+            // Redirect to Hosted Checkout Page!
+            window.location.href = data.checkoutUrl;
+          } else {
+            alert('Error creating gateway order: ' + data.message);
+            btn.disabled = false;
+            btn.innerHTML = 'Try Again';
+          }
+        } catch (err) {
+          alert('Failed to connect to gateway: ' + err.message);
+          btn.disabled = false;
+        }
+      } else {
+        // Option 2: Headless Direct 2D API call
+        const cardNumber = document.getElementById('directCardNum').value;
+        const cardCvv = document.getElementById('directCardCvv').value;
+
+        try {
+          const res = await fetch('/api/v1/charge/direct-2d', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId,
+              amount: 1500,
+              currency: 'INR',
+              customer: { name, email, phone },
+              paymentMethod: 'card',
+              cardNumber,
+              cardExpiry: '12/28',
+              cardCvv,
+              cardHolderName: name
+            })
+          });
+
+          const data = await res.json();
+          if (data.success && data.status === 'APPROVED') {
+            window.location.href = `/demo-booking?status=success&bookingId=${bookingId}&txnId=${data.transactionId}`;
+          } else {
+            alert('2D Transaction Declined: ' + data.message);
+            btn.disabled = false;
+            btn.innerHTML = 'Try Again';
+          }
+        } catch (err) {
+          alert('Direct API Error: ' + err.message);
+          btn.disabled = false;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
