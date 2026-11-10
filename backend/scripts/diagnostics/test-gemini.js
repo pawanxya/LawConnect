@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ path: fileURLToPath(new URL("../../.env", import.meta.url)) });
 
 const testGemini = async () => {
   try {

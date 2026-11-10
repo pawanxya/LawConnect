@@ -2,11 +2,11 @@
   "name": "custom-2d-payment-gateway",
   "version": "1.0.0",
   "description": "White-Label 2D Payment Gateway Prototype with Merchant API, Hosted Checkout, Direct Charge API, and Webhooks",
-  "main": "server.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
   },
   "keywords": ["payment-gateway", "2d-gateway", "fintech", "nmi-alternative", "white-label"],
   "author": "Gateway Prototype Team",

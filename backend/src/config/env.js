@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const envFiles = [resolve(__dirname, "../.env"), resolve(__dirname, ".env")];
+const envFiles = [resolve(__dirname, "../../../.env"), resolve(__dirname, "../../.env")];
 const mergedEnv = {};
 
 for (const envFile of envFiles) {

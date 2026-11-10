@@ -158,6 +158,7 @@ LawConnect/
 ├── backend/
 │   ├── src/
 │   │   ├── app.js               # Express application configuration
+│   │   ├── server.js            # Server entry point with graceful shutdown
 │   │   ├── socket.js            # Socket.io connection and room handling
 │   │   ├── config/db.js         # Resilient MongoDB Atlas connection
 │   │   ├── controllers/         # Auth, Booking, Message, Lawyer controllers
@@ -165,7 +166,7 @@ LawConnect/
 │   │   ├── models/              # Mongoose Schemas (User, Lawyer, Booking, etc.)
 │   │   ├── routes/              # Express API Route declarations
 │   │   └── seed/                # Initial seed data for platform testing
-│   ├── server.js                # Server entry point with graceful shutdown
+│   ├── scripts/                 # Diagnostics and smoke-test utilities
 │   └── .env                     # Backend environment configuration
 │
 ├── frontend/
@@ -176,15 +177,22 @@ LawConnect/
 │   │   ├── pages/               # Landing, Dashboards, Booking, Messages
 │   │   ├── App.jsx              # Protected route trees and navigation
 │   │   └── main.jsx             # React DOM root wrapped with ClerkProvider
+│   ├── scripts/                 # Local smoke-test utilities
 │   └── .env                     # Frontend environment configuration
 │
-├── BOOKING_GUIDE.md             # Detailed booking state machine documentation
-├── MESSAGING_GUIDE.md           # Real-time WebSockets & event schemas
-├── SESSION_MANAGEMENT.md        # Clerk session & security architecture
-└── README.md                    # Main platform documentation
+├── custom-payment-gateway/
+│   ├── src/                     # Gateway server and payment modules
+│   └── public/                  # Hosted checkout and demo pages
+└── docs/
+    ├── BOOKING_GUIDE.md         # Detailed booking state machine documentation
+    ├── DEPLOYMENT.md            # Production deployment checklist
+    ├── MESSAGING_GUIDE.md       # Real-time WebSockets & event schemas
+    ├── PAYMENT_AND_REALTIME_SETUP.md
+    ├── SESSION_MANAGEMENT.md    # Clerk session & security architecture
+    └── SLOT_BOOKING_IMPLEMENTATION.md
 ```
 
-For production environment variables and host configuration, see [DEPLOYMENT.md](DEPLOYMENT.md). For payment and Socket.IO setup details, see [PAYMENT_AND_REALTIME_SETUP.md](PAYMENT_AND_REALTIME_SETUP.md).
+For production environment variables and host configuration, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). For payment and Socket.IO setup details, see [docs/PAYMENT_AND_REALTIME_SETUP.md](docs/PAYMENT_AND_REALTIME_SETUP.md). The complete technical guides are in [`docs/`](docs/).
 
 ---
 
