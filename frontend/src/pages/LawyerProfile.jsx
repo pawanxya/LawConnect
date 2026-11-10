@@ -22,7 +22,7 @@ import {
   createRazorpayOrder, 
   verifyRazorpayPayment 
 } from "@/lib/paymentService";
-import { socket } from "@/lib/socketClient";
+import { socket, connectSocket } from "@/lib/socketClient";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
@@ -85,9 +85,9 @@ const LawyerProfile = () => {
   }, [id]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !currentUser?.id) return;
 
-    socket.connect();
+    connectSocket().catch(() => {});
 
     const handleLawyerSlotsUpdated = (payload) => {
       if (!payload) return;
@@ -115,7 +115,7 @@ const LawyerProfile = () => {
     return () => {
       socket.off("lawyer_slots_updated", handleLawyerSlotsUpdated);
     };
-  }, [id, lawyer?.id, lawyer?.userId]);
+  }, [id, lawyer?.id, lawyer?.userId, currentUser?.id]);
 
   const isClient = currentUser?.role === "client";
   const availableSlots = useMemo(

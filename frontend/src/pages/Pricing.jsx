@@ -11,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { useState } from "react";
 import { createSubscriptionOrder, verifySubscriptionPayment, updateMembershipTier } from "@/lib/dataService";
+import { loadRazorpayScript } from "@/lib/paymentService";
 
 const clientPlans = [
   {
@@ -125,6 +126,10 @@ const Pricing = () => {
     if (plan.tier === "premium" || plan.tier === "plus") {
       try {
         setIsUpdating(true);
+        const checkoutLoaded = await loadRazorpayScript();
+        if (!checkoutLoaded || !window.Razorpay) {
+          throw new Error("Secure checkout could not be loaded. Check your internet connection and try again.");
+        }
         const order = await createSubscriptionOrder(plan.tier);
         
         const options = {

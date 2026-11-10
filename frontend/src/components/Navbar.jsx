@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/context/AuthContext";
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead } from "@/lib/dataService";
-import { socket } from "@/lib/socketClient";
+import { socket, connectSocket } from "@/lib/socketClient";
 
 const getPrimaryNavLinks = (role) => {
   if (role === "lawyer") {
@@ -177,11 +177,7 @@ const Navbar = () => {
 
     loadNotifications();
 
-    if (!socket.connected) {
-      socket.connect();
-    }
-
-    socket.emit("join", currentUser.id);
+    connectSocket().catch((error) => console.error("Live notifications unavailable", error));
 
     const handleNewNotification = (notification) => {
       if (notification.type === "new_message" && location.pathname === "/messages") {

@@ -1210,10 +1210,10 @@ const payCaseFee = async (req, res) => {
 
 const updateMembershipTier = async (req, res) => {
   const { tier } = req.body;
-  const validTiers = ["basic", "premium", "plus"];
+  const validTiers = ["basic"];
   
   if (!validTiers.includes(tier)) {
-    return res.status(400).json({ message: "Invalid membership tier." });
+    return res.status(400).json({ message: "Only the free Basic plan can be selected here. Paid upgrades require checkout." });
   }
 
   let account = await User.findById(req.user._id);

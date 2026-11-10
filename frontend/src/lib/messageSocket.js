@@ -1,19 +1,14 @@
-import { socket } from "./socketClient";
+import { socket, connectSocket, disconnectSocket } from "./socketClient";
 
 /**
  * Initialize socket connection for messaging
  * @param {string} userId - Current user's ID
  * @param {Function} onConnect - Callback when socket connects
  */
-export const initializeMessageSocket = (userId, onConnect) => {
+export const initializeMessageSocket = async (userId, onConnect) => {
   if (!userId) return;
-
-  socket.connect();
-
-  socket.on("connect", () => {
-    socket.emit("join", userId);
-    onConnect?.();
-  });
+  await connectSocket();
+  onConnect?.();
 };
 
 /**
@@ -116,5 +111,5 @@ export const markMessagesRead = (messageIds, receiverId) => {
  * Disconnect socket
  */
 export const disconnectMessageSocket = () => {
-  socket.disconnect();
+  disconnectSocket();
 };

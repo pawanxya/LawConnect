@@ -1,7 +1,10 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
+import { Booking } from "./models/Booking.js";
 import { Lawyer } from "./models/Lawyer.js";
 import { Message } from "./models/Message.js";
 import { Notification } from "./models/Notification.js";
+import { corsOptions } from "./config/cors.js";
 
 let io;
 const onlineUsers = new Map(); // roomId -> Set<socketId>
@@ -64,11 +67,19 @@ const emitToResolvedRooms = async (identifier, eventName, payload) => {
 
 export const initializeSocket = (httpServer) => {
   io = new Server(httpServer, {
-    cors: {
-      origin: true,
-      methods: ["GET", "POST"],
-      credentials: true,
-    },
+    cors: corsOptions,
+  });
+
+  io.use((socket, next) => {
+    try {
+      const ticket = socket.handshake.auth?.ticket;
+      const payload = jwt.verify(ticket, process.env.JWT_SECRET);
+      if (payload.scope !== "messaging" || !payload.sub) throw new Error("Invalid ticket");
+      socket.userId = payload.sub.toString();
+      next();
+    } catch {
+      next(new Error("Unauthorized socket connection"));
+    }
   });
 
   io.on("connection", (socket) => {
@@ -76,11 +87,8 @@ export const initializeSocket = (httpServer) => {
     console.log(`Client connected: ${socket.id}`);
 
     // Join room & mark online
-    socket.on("join", async (userId) => {
-      if (!userId) return;
-
-      const roomIds = await resolveMessagingRoomIds(userId);
-      socket.userId = userId.toString();
+    socket.on("join", async () => {
+      const roomIds = await resolveMessagingRoomIds(socket.userId);
 
       roomIds.forEach((roomId) => {
         socket.join(roomId);
@@ -117,13 +125,24 @@ export const initializeSocket = (httpServer) => {
           return;
         }
 
+        // A room is not enough authorization: both participants must share a consultation.
+        const senderAsLawyer = await Lawyer.exists({ _id: socket.userId });
+        const bookingFilter = senderAsLawyer
+          ? { lawyerId: socket.userId, clientId: receiverId, status: { $in: ["pending", "approved", "completed", "paid"] } }
+          : { clientId: socket.userId, lawyerId: receiverId, status: { $in: ["pending", "approved", "completed", "paid"] } };
+        const booking = await Booking.findOne(bookingFilter).select("_id").lean();
+        if (!booking) {
+          callback?.({ success: false, error: "Messaging is available after a consultation booking." });
+          return;
+        }
+
         const message = new Message({
           senderId: socket.userId,
           senderName,
           receiverId: receiverId.toString(),
           content: trimmedContent || "Attachment shared",
           attachment: attachment || null,
-          bookingId: bookingId || null,
+          bookingId: booking._id,
           timestamp: new Date().toISOString(),
           read: false,
         });

@@ -41,7 +41,7 @@ import {
   verifySubscriptionPayment,
   updateMembershipTier,
 } from "@/lib/dataService";
-import { socket } from "@/lib/socketClient";
+import { socket, connectSocket } from "@/lib/socketClient";
 import {
   addMinutesToTime,
   generateDefaultSlots,
@@ -233,8 +233,7 @@ const LawyerDashboard = () => {
   useEffect(() => {
     if (!currentUser?.id || !isVerifiedLawyer) return;
 
-    socket.connect();
-    socket.emit("join", currentUser.id);
+    connectSocket().catch(() => {});
 
     const handleSocketUpdate = (updatedCase) => {
       setLawyerCases((prev) => {

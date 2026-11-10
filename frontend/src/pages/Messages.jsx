@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { getDashboardPath } from "@/lib/auth";
 import { fetchBookings, fetchLawyers, fetchMessages, uploadDocument } from "@/lib/dataService";
-import { socket } from "@/lib/socketClient";
+import { socket, connectSocket } from "@/lib/socketClient";
 import { 
   ArrowLeft, 
   Send, 
@@ -50,6 +50,7 @@ const Messages = () => {
   const menuRef = useRef(null);
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   const currentUserId = useMemo(() => {
     const id = currentUser?.id || currentUser?._id;
@@ -173,10 +174,16 @@ const Messages = () => {
   // 1. Core messaging socket connection and receive_message hook
   useEffect(() => {
     if (!currentUserId) return;
-    if (!socket.connected) {
-      socket.connect();
-    }
-    socket.emit("join", currentUserId);
+
+    const connect = async () => {
+      try {
+        await connectSocket();
+      } catch (error) {
+        console.error("Unable to start secure messaging", error);
+        toast.error("Could not connect to live messaging. Please refresh and try again.");
+      }
+    };
+    connect();
 
     const onMessage = (m) => {
       console.log("[SOCKET] Received message:", m);
@@ -247,7 +254,7 @@ const Messages = () => {
   };
 
   const handleSend = (attachmentData = null) => {
-    if ((!message.trim() && !attachmentData) || !activePartner || !activeBooking) return;
+    if ((!message.trim() && !attachmentData) || !activePartner || !activeBooking || !socket.connected) return;
     const now = new Date().toISOString();
     const tempId = `temp-${Date.now()}`;
     const payload = { 
@@ -271,7 +278,12 @@ const Messages = () => {
     };
     
     setMessages(prev => [...prev, temp]);
-    socket.emit("send_message", payload, (res) => !res.success && setMessages(prev => prev.filter(x => x._id !== temp._id)));
+    socket.emit("send_message", payload, (res) => {
+      if (!res?.success) {
+        setMessages(prev => prev.filter(x => x._id !== temp._id));
+        toast.error(res?.error || "Message could not be sent.");
+      }
+    });
     
     if (!attachmentData) {
       setMessage("");
@@ -501,8 +513,15 @@ const Messages = () => {
                         onChange={(e) => {
                           setMessage(e.target.value);
                           socket.emit("typing", { to: activePartner.id });
+                          clearTimeout(typingTimeoutRef.current);
+                          typingTimeoutRef.current = setTimeout(() => socket.emit("stop_typing", { to: activePartner.id }), 1200);
                         }}
-                        onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSend();
+                          }
+                        }}
                       />
                       <button 
                         onClick={() => handleSend()} 

@@ -90,6 +90,9 @@ MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/lawconnect?r
 JWT_SECRET=your_secure_random_64_char_secret
 CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
+CLIENT_ORIGIN=http://localhost:8080
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
 ```
 
 #### Frontend (`frontend/.env`)
@@ -111,7 +114,7 @@ npm run dev
 # Terminal 2: Frontend
 cd frontend
 npm run dev
-# Running on http://localhost:5173
+# Running on http://localhost:8080
 ```
 
 ---
@@ -180,6 +183,8 @@ LawConnect/
 ├── SESSION_MANAGEMENT.md        # Clerk session & security architecture
 └── README.md                    # Main platform documentation
 ```
+
+For production environment variables and host configuration, see [DEPLOYMENT.md](DEPLOYMENT.md). For payment and Socket.IO setup details, see [PAYMENT_AND_REALTIME_SETUP.md](PAYMENT_AND_REALTIME_SETUP.md).
 
 ---
 

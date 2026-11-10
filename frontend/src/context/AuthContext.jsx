@@ -14,6 +14,7 @@ import {
   syncClerkUser,
   updateUser,
 } from "@/lib/authService";
+import { disconnectSocket } from "@/lib/socketClient";
 
 const AuthContext = createContext(null);
 
@@ -51,7 +52,7 @@ const AuthProvider = ({ children }) => {
             email: clerkUser.primaryEmailAddress?.emailAddress,
             name: clerkUser.fullName || clerkUser.firstName || "User",
             avatar: clerkUser.imageUrl,
-            role: (clerkUser.publicMetadata?.role) || "client",
+            role: clerkUser.unsafeMetadata?.role || clerkUser.publicMetadata?.role || "client",
           });
 
           if (isMounted && synced) {
@@ -94,6 +95,7 @@ const AuthProvider = ({ children }) => {
       // Ignore clerk signout errors
     }
     await logoutUser();
+    disconnectSocket();
     setCurrentUser(null);
   }, [clerk]);
 

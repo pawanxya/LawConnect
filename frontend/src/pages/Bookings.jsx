@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
-import { socket } from "@/lib/socketClient";
+import { socket, connectSocket } from "@/lib/socketClient";
 import { fetchBookings, cancelBooking, updateBookingStatus, createCaseRequest, payForBooking } from "@/lib/dataService";
 import { loadRazorpayScript, createRazorpayOrder, verifyRazorpayPayment } from "@/lib/paymentService";
 import { CaseBookingDialog } from "@/components/CaseBookingDialog";
@@ -61,8 +61,7 @@ export default function Bookings() {
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    socket.connect();
-    socket.emit("join", currentUser.id);
+    connectSocket().catch(() => {});
 
     const handleBookingUpdated = (booking) => {
       setBookings((prev) => {

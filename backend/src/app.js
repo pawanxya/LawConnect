@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import path from "path";
+import { corsOptions } from "./config/cors.js";
 
 import { authRoutes } from "./routes/authRoutes.js";
 import { bookingRoutes } from "./routes/bookingRoutes.js";
@@ -9,15 +10,12 @@ import { notificationRoutes } from "./routes/notificationRoutes.js";
 import { uploadRoutes } from "./routes/uploadRoutes.js";
 import { paymentRoutes } from "./routes/paymentRoutes.js";
 import { aiRoutes } from "./routes/aiRoutes.js";
+import { socketRoutes } from "./routes/socketRoutes.js";
 
 const app = express();
 
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  }),
-);
+app.set("trust proxy", process.env.NODE_ENV === "production" ? 1 : false);
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "5mb" }));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
@@ -42,6 +40,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/socket", socketRoutes);
 app.use("/api", dataRoutes);
 app.use("/api/ai", aiRoutes);
 

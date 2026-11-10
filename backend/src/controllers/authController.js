@@ -48,7 +48,7 @@ const syncUser = async (req, res) => {
 
     // 1. Check if user already exists by clerkId or email
     let user = null;
-    let isLawyer = role === "lawyer";
+    const requestedRole = role === "lawyer" ? "lawyer" : "client";
 
     if (clerkId) {
       user = (await User.findOne({ clerkId })) || (await Lawyer.findOne({ clerkId }));
@@ -71,7 +71,7 @@ const syncUser = async (req, res) => {
 
     // 2. User doesn't exist yet: Create new record in MongoDB
     const userAvatar = avatar || getAvatar(name || normalizedEmail.split("@")[0]);
-    const nextRole = role === "admin" ? "admin" : (role === "lawyer" ? "lawyer" : "client");
+    const nextRole = requestedRole;
 
     if (nextRole === "lawyer") {
       user = await Lawyer.create({

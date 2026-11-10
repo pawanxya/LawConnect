@@ -25,7 +25,7 @@ import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/paymentService
 import { LawyerSuggestions } from "@/components/LawyerSuggestions";
 import { CaseUpdateDialog } from "@/components/CaseUpdateDialog";
 import { TimelineEventEditDialog } from "@/components/TimelineEventEditDialog";
-import { socket } from "@/lib/socketClient";
+import { socket, connectSocket } from "@/lib/socketClient";
 import {
   Briefcase,
   Calendar as CalendarIcon,
@@ -92,8 +92,7 @@ const ClientDashboard = () => {
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    socket.connect();
-    socket.emit("join", currentUser.id);
+    connectSocket().catch(() => {});
 
     const handleCaseUpdate = (updatedCase) => {
       setCases((prev) => {

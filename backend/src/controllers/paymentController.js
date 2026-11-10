@@ -6,6 +6,7 @@ import { Booking } from "../models/Booking.js";
 import { Case } from "../models/Case.js";
 import { Lawyer } from "../models/Lawyer.js";
 import { Transaction } from "../models/Transaction.js";
+import { PaymentOrder } from "../models/PaymentOrder.js";
 import { User } from "../models/User.js";
 import { Notification } from "../models/Notification.js";
 import mongoose from "mongoose";
@@ -51,22 +52,28 @@ const getRazorpay = () => {
 
 export const createOrder = async (req, res) => {
   try {
-    const { amount, bookingId, caseId } = req.body;
-    console.log(`[PAYMENT] Request received - Amount: ${amount}, BookingID: ${bookingId}, CaseID: ${caseId}`);
-    
-    if (amount === undefined || amount === null || Number(amount) <= 0) {
-      console.warn(`[PAYMENT] Blocked 0 or invalid amount: ${amount}`);
-      return res.status(400).json({ 
-        message: "Payment is not required for ₹0 transactions." 
-      });
-    }
+    const { bookingId, caseId } = req.body;
 
     if (!bookingId && !caseId) {
       return res.status(400).json({ message: "Booking ID or Case ID is required." });
     }
 
+    let amount;
+    if (bookingId) {
+      const booking = await Booking.findById(bookingId).lean();
+      if (!booking || booking.clientId.toString() !== req.user._id.toString()) return res.status(404).json({ message: "Booking not found." });
+      if (booking.paymentStatus === "paid") return res.status(409).json({ message: "This booking has already been paid." });
+      amount = Number(booking.amount);
+    } else {
+      const caseItem = await Case.findById(caseId).lean();
+      if (!caseItem || caseItem.clientId.toString() !== req.user._id.toString()) return res.status(404).json({ message: "Case not found." });
+      if (caseItem.status !== "closed" || caseItem.paymentStatus === "paid") return res.status(409).json({ message: "This case is not available for payment." });
+      amount = Number(caseItem.finalFee);
+    }
+    if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ message: "Payment is not required for this item." });
+
     const options = {
-      amount: Math.round(Number(amount) * 100), 
+      amount: Math.round(amount * 100),
       currency: "INR",
       receipt: `receipt_${bookingId || caseId}`,
     };
@@ -118,11 +125,23 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment signature." });
     }
 
+    const expectedReceipt = `receipt_${bookingId || caseId}`;
+    const gatewayOrder = await getRazorpay().orders.fetch(razorpay_order_id);
+    if (gatewayOrder.receipt !== expectedReceipt) {
+      return res.status(400).json({ message: "Payment order does not match this booking or case." });
+    }
+
     // --- CASE PAYMENT FLOW ---
     if (caseId) {
       const caseItem = await Case.findById(caseId);
       if (!caseItem) {
         return res.status(404).json({ message: "Case not found." });
+      }
+      if (caseItem.clientId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "Only the client can pay this case fee." });
+      }
+      if (caseItem.paymentStatus === "paid") {
+        return res.status(409).json({ message: "This case fee has already been paid." });
       }
 
       caseItem.paymentStatus = "paid";
@@ -220,6 +239,12 @@ export const verifyPayment = async (req, res) => {
     if (!booking) {
       return res.status(404).json({ message: "Booking not found." });
     }
+    if (booking.clientId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Only the client can pay this booking." });
+    }
+    if (booking.paymentStatus === "paid") {
+      return res.status(409).json({ message: "This booking has already been paid." });
+    }
 
     booking.status = "paid";
     booking.paymentStatus = "paid";
@@ -315,7 +340,8 @@ export const verifyPayment = async (req, res) => {
 export const createSubscriptionOrder = async (req, res) => {
   try {
     const { plan } = req.body; // e.g. "premium" or "plus"
-    if (plan !== "premium" && plan !== "plus") {
+    const allowedPlan = req.user.role === "lawyer" ? "premium" : "plus";
+    if (plan !== allowedPlan) {
       return res.status(400).json({ message: "Invalid subscription plan." });
     }
 
@@ -328,6 +354,14 @@ export const createSubscriptionOrder = async (req, res) => {
 
     const rzp = getRazorpay();
     const order = await rzp.orders.create(options);
+
+    await PaymentOrder.create({
+      razorpayOrderId: order.id,
+      userId: req.user._id,
+      plan,
+      amount: planPrice,
+      currency: order.currency,
+    });
 
     return res.status(200).json({
       orderId: order.id,
@@ -367,6 +401,14 @@ export const verifySubscriptionPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment signature." });
     }
 
+    const paymentOrder = await PaymentOrder.findOne({ razorpayOrderId: razorpay_order_id });
+    if (!paymentOrder || paymentOrder.userId.toString() !== req.user._id.toString() || paymentOrder.plan !== plan) {
+      return res.status(400).json({ message: "Payment order does not match this account or plan." });
+    }
+    if (paymentOrder.status === "paid") {
+      return res.status(200).json({ message: "Subscription was already activated.", membershipTier: paymentOrder.plan });
+    }
+
     // Payment is valid! Upgrade the user account
     const userId = req.user._id;
     const role = req.user.role;
@@ -384,6 +426,9 @@ export const verifySubscriptionPayment = async (req, res) => {
 
     account.membershipTier = plan;
     await account.save();
+    paymentOrder.status = "paid";
+    paymentOrder.razorpayPaymentId = razorpay_payment_id;
+    await paymentOrder.save();
 
     // Cross-update if linked or necessary
     if (role === "lawyer" && account.userId) {
