@@ -1,201 +1,201 @@
 # LawConnect
 
-A comprehensive, production-ready legal tech platform connecting clients with verified lawyers for consultations, real-time messaging, case tracking, and schedule management. Built with **React 18**, **Node.js**, **Express**, **MongoDB Atlas**, **Socket.io**, and **Clerk Authentication**.
+> A full-stack legal services platform that connects clients with verified lawyers for consultations, case tracking, secure messaging, and payments.
 
----
+LawConnect is a portfolio project focused on real product workflows rather than a static UI demo. It includes role-based dashboards, atomic consultation-slot booking, authenticated real-time chat, case timelines, document uploads, an AI legal assistant, and Razorpay payment flows.
 
-## 🌟 Key Highlights
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=20232A)](frontend/)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)](backend/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white)](backend/src/models/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-realtime-010101?logo=socket.io&logoColor=white)](backend/src/socket.js)
 
-- **Modern Authentication & Authorization**: Integrated with **Clerk** supporting Google OAuth, Email/Passwordless verification, and session token rotation with role-based access control (**Client**, **Lawyer**, **Admin**).
-- **Lawyer Discovery & Search**: Filter lawyers by specialization, experience, hourly rate, and client reviews.
-- **Slot-Based Consultation Booking**: Dynamic consultation slots with conflict prevention and state transitions (`Pending` → `Approved` → `Completed` / `Cancelled`).
-- **Real-Time Messaging & Sockets**: Socket.io-powered messaging with strict **Message Gating** (messaging is only permitted for participants with an active booking).
-- **Live Notifications**: Real-time Socket events for booking status changes, case updates, and incoming messages.
-- **Lawyer & Client Dashboards**: Specialized dashboards for tracking active cases, consultation history, timeline hearings, and reviews.
-- **Cloud-Native Database**: Backed by **MongoDB Atlas** with automatic DNS SRV resilience.
+## What the product does
 
----
+| User | Main workflows |
+| --- | --- |
+| Client | Discover lawyers, book consultations, pay fees, open cases, chat, upload documents, and follow hearing timelines |
+| Lawyer | Manage profile and availability, accept bookings, manage cases, update hearings, communicate with clients, and track earnings |
+| Admin | Review lawyers, monitor platform activity, manage users, and update transaction status |
 
-## 🛠️ Tech Stack
+### Core product flows
 
-### Frontend
-- **Framework**: React 18 (Vite)
-- **Authentication**: `@clerk/clerk-react`
-- **Styling**: Tailwind CSS & Lucide Icons
-- **UI Components**: Shadcn UI with Radix UI primitives
-- **Real-time Client**: Socket.io-client
-- **State & Data**: React Context API & TanStack React Query
+1. A client finds a verified lawyer and selects an available consultation slot.
+2. The backend atomically reserves the slot to prevent double booking.
+3. The lawyer approves the consultation and the case workspace becomes available.
+4. Participants can exchange messages only when a valid consultation relationship exists.
+5. Payments, notifications, case updates, and hearing events are persisted and synchronized in real time.
 
-### Backend
-- **Runtime**: Node.js (ESM)
-- **Framework**: Express.js
-- **Database**: MongoDB Atlas with Mongoose ODM
-- **Auth & Security**: `@clerk/express`, JWT Verification, CORS
-- **WebSockets**: Socket.io (Room-based event dispatching)
-- **File Uploads**: Multer
-- **AI Integrations**: Google Gemini API (`@google/generative-ai`)
+## Engineering highlights
 
----
+- **Authentication and authorization**: Clerk sessions are synchronized with MongoDB profiles; middleware enforces authentication, roles, and verified-lawyer access.
+- **Concurrency-safe booking**: MongoDB `findOneAndUpdate` reserves a slot only when it is still available, with rollback handling for downstream failures.
+- **Secure realtime messaging**: Socket connections use short-lived server-signed tickets, and message delivery checks the participants' booking relationship.
+- **Payments**: Razorpay orders are created and verified on the server; stored booking and case data determines payable amounts.
+- **Resilient integrations**: MongoDB connection retries, graceful server shutdown, and an AI fallback responder keep local development usable.
+- **Maintainable frontend**: Lazy-loaded routes, shared UI primitives, centralized API clients, role guards, and dedicated service modules.
 
-## 📐 Architecture Overview
+Detailed design notes:
 
-```
-                      ┌──────────────────────┐
-                      │   Clerk Auth Cloud   │
-                      └──────────┬───────────┘
-                                 │ (JWT Tokens & OAuth)
-                                 ▼
-┌──────────────────┐      ┌─────────────────────────┐      ┌─────────────────────┐
-│  React Frontend  │ ───► │  Express Backend API    │ ───► │ MongoDB Atlas Cloud │
-│ (Vite + Tailwind)│      │  (Port 4000)            │      │ (Clients & Lawyers) │
-└────────┬─────────┘      └────────────┬────────────┘      └─────────────────────┘
-         │                             │
-         └────── Socket.io Duplex ─────┘
-            (Gated Real-time Rooms)
-```
+- [Booking and concurrency design](docs/SLOT_BOOKING_IMPLEMENTATION.md)
+- [Authentication and session architecture](docs/SESSION_MANAGEMENT.md)
+- [Messaging and Socket.IO flow](docs/MESSAGING_GUIDE.md)
+- [Payment and realtime setup](docs/PAYMENT_AND_REALTIME_SETUP.md)
 
----
+## Architecture
 
-## 🚀 Getting Started
-
-### Prerequisites
-- **Node.js** (v18.0.0 or higher)
-- **npm** (v9+)
-- **MongoDB Atlas** account (or local MongoDB)
-- **Clerk** account ([dashboard.clerk.com](https://dashboard.clerk.com))
-
-### 1. Clone & Install Dependencies
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/LawConnect.git
-cd LawConnect
-
-# Install Backend dependencies
-cd backend
-npm install
-
-# Install Frontend dependencies
-cd ../frontend
-npm install
+```mermaid
+flowchart LR
+    Browser[React + Vite frontend] -->|Clerk token / REST| API[Express API]
+    Browser <-->|Socket.IO| API
+    API --> Mongo[(MongoDB)]
+    API --> Clerk[Clerk]
+    API --> Razorpay[Razorpay]
+    API --> Gemini[Google Gemini]
 ```
 
-### 2. Environment Variables Configuration
+### Request and authorization flow
 
-#### Backend (`backend/.env`)
-```env
-PORT=4000
-NODE_ENV=development
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/lawconnect?retryWrites=true&w=majority
-JWT_SECRET=your_secure_random_64_char_secret
-CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-CLIENT_ORIGIN=http://localhost:8080
-RAZORPAY_KEY_ID=rzp_test_...
-RAZORPAY_KEY_SECRET=...
+```text
+Browser
+  -> Clerk session token
+  -> Express middleware
+  -> MongoDB user/lawyer profile
+  -> role and verification checks
+  -> controller
+  -> MongoDB / Razorpay / Socket.IO
 ```
 
-#### Frontend (`frontend/.env`)
-```env
-VITE_API_URL=http://localhost:4000
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
-```
+## Repository map
 
-### 3. Run the Development Servers
-
-In two separate terminals:
-
-```bash
-# Terminal 1: Backend
-cd backend
-npm run dev
-# Running on http://localhost:4000
-
-# Terminal 2: Frontend
-cd frontend
-npm run dev
-# Running on http://localhost:8080
-```
-
----
-
-## 🛡️ Authentication & Authorization Flow
-
-1. **User Sign-In / Sign-Up**: The frontend renders Clerk pre-built `<SignIn />` and `<SignUp />` components supporting email OTP and Google OAuth.
-2. **Session Token**: On successful authentication, Clerk issues a session JWT token.
-3. **Backend Synchronization (`POST /api/auth/sync`)**: The frontend sends the Clerk user profile (name, email, role) to the backend. The backend links or creates the MongoDB document (`User` for clients/admins or `Lawyer` for legal professionals).
-4. **Authorized Requests**: All protected API requests pass the Clerk Bearer token in the `Authorization` header. The backend middleware resolves `req.user` directly from MongoDB.
-5. **Role-Based Guards**:
-   - `authRequired`: Enforces valid authentication.
-   - `requireVerifiedLawyer`: Restricts lawyer management actions to verified profiles.
-   - `adminOnly`: Restricts administrative management routes.
-
----
-
-## 📅 Booking Lifecycle & Message Gating
-
-```
-Client Requests Consultation
-         │
-         ▼
-    [ PENDING ] ──────► Lawyer Reviews Case
-         │
-         ├─── (Approved) ───► [ APPROVED ] ──► Room Unlocks: Real-time Chat Enabled
-         │                                 ──► Status Updates & Hearing Timeline
-         │                                 ──► Mark Session as [ COMPLETED ]
-         │
-         └─── (Rejected) ───► [ CANCELLED ] ──► Slot Released
-```
-
-- **Message Gating**: Sockets verify whether a booking exists between the two users and is in an `approved` state before allowing messages to be sent or read.
-
----
-
-## 📂 Project Structure
-
-```
+```text
 LawConnect/
 ├── backend/
 │   ├── src/
-│   │   ├── app.js               # Express application configuration
-│   │   ├── server.js            # Server entry point with graceful shutdown
-│   │   ├── socket.js            # Socket.io connection and room handling
-│   │   ├── config/db.js         # Resilient MongoDB Atlas connection
-│   │   ├── controllers/         # Auth, Booking, Message, Lawyer controllers
-│   │   ├── middleware/auth.js   # Clerk & JWT role-based middleware
-│   │   ├── models/              # Mongoose Schemas (User, Lawyer, Booking, etc.)
-│   │   ├── routes/              # Express API Route declarations
-│   │   └── seed/                # Initial seed data for platform testing
-│   ├── scripts/                 # Diagnostics and smoke-test utilities
-│   └── .env                     # Backend environment configuration
-│
+│   │   ├── config/          Environment, CORS, and database setup
+│   │   ├── controllers/     Business logic for auth, booking, cases, payments, and AI
+│   │   ├── middleware/      Authentication and role guards
+│   │   ├── models/          Mongoose schemas
+│   │   ├── routes/          HTTP route declarations
+│   │   ├── seed/            Development seed data
+│   │   ├── app.js           Express application
+│   │   ├── server.js        HTTP and Socket.IO startup
+│   │   └── socket.js        Authenticated realtime messaging
+│   └── scripts/             Diagnostics and smoke-test utilities
 ├── frontend/
 │   ├── src/
-│   │   ├── components/          # Reusable UI (Navbar, Dialogs, RouteGuards)
-│   │   ├── context/AuthContext  # Clerk user sync and state provider
-│   │   ├── lib/apiClient.js     # Centralized fetch client with Clerk token injection
-│   │   ├── pages/               # Landing, Dashboards, Booking, Messages
-│   │   ├── App.jsx              # Protected route trees and navigation
-│   │   └── main.jsx             # React DOM root wrapped with ClerkProvider
-│   ├── scripts/                 # Local smoke-test utilities
-│   └── .env                     # Frontend environment configuration
-│
-├── custom-payment-gateway/
-│   ├── src/                     # Gateway server and payment modules
-│   └── public/                  # Hosted checkout and demo pages
-└── docs/
-    ├── BOOKING_GUIDE.md         # Detailed booking state machine documentation
-    ├── DEPLOYMENT.md            # Production deployment checklist
-    ├── MESSAGING_GUIDE.md       # Real-time WebSockets & event schemas
-    ├── PAYMENT_AND_REALTIME_SETUP.md
-    ├── SESSION_MANAGEMENT.md    # Clerk session & security architecture
-    └── SLOT_BOOKING_IMPLEMENTATION.md
+│   │   ├── components/      Shared UI and dialogs
+│   │   ├── context/         Authentication and application state
+│   │   ├── hooks/           Reusable React hooks
+│   │   ├── lib/             API, auth, payment, and socket clients
+│   │   ├── pages/           Role-based product screens
+│   │   └── App.jsx          Route tree and providers
+│   └── scripts/             Local smoke-test utilities
+├── custom-payment-gateway/  Standalone native Node.js payment prototype
+├── docs/                    Setup guides and technical design notes
+└── README.md
 ```
 
-For production environment variables and host configuration, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). For payment and Socket.IO setup details, see [docs/PAYMENT_AND_REALTIME_SETUP.md](docs/PAYMENT_AND_REALTIME_SETUP.md). The complete technical guides are in [`docs/`](docs/).
+## Run locally
 
----
+### Prerequisites
 
-## 📜 License
+- Node.js 18 or newer
+- npm 9 or newer
+- MongoDB (local or Atlas)
+- Clerk application credentials
+- Razorpay test credentials for payment flows
 
-MIT License. Developed for modern legal technology solutions and portfolio demonstrations.
+### Install
+
+```bash
+git clone https://github.com/pawanxya/LawConnect.git
+cd LawConnect
+
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+### Configure environment
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Fill in the values in both files. Never commit `.env` files or production secrets.
+
+### Start the application
+
+Run each service in a separate terminal:
+
+```bash
+# Terminal 1
+cd backend
+npm run dev
+
+# Terminal 2
+cd frontend
+npm run dev
+```
+
+The frontend runs on `http://localhost:8080` and the API runs on `http://localhost:4000`. Verify the backend with:
+
+```bash
+curl http://localhost:4000/api/health
+```
+
+### Useful checks
+
+```bash
+cd frontend
+npm run build
+npm run lint
+
+cd ../backend
+node --check src/server.js
+```
+
+The repository also contains diagnostic and smoke-test commands under `backend/scripts/` and `frontend/scripts/`.
+
+## API surface
+
+The backend exposes focused route groups under `/api`:
+
+| Group | Purpose |
+| --- | --- |
+| `/api/auth` | Clerk synchronization, login, profile, and session operations |
+| `/api/lawyers` | Lawyer discovery, profiles, and availability |
+| `/api/bookings` | Consultation creation, status changes, payments, and cancellation |
+| `/api/cases` | Case records, fees, hearings, and timeline events |
+| `/api/messages` | Persisted message history and message creation |
+| `/api/payments` | Razorpay order creation and verification |
+| `/api/notifications` | Notification retrieval and read state |
+| `/api/ai` | Legal assistant chat and case summaries |
+| `/api/socket/ticket` | Short-lived ticket for authenticated Socket.IO connections |
+
+## Project documentation
+
+- [Deployment checklist](docs/DEPLOYMENT.md)
+- [Booking guide](docs/BOOKING_GUIDE.md)
+- [Session management](docs/SESSION_MANAGEMENT.md)
+- [Messaging guide](docs/MESSAGING_GUIDE.md)
+- [Payment and realtime setup](docs/PAYMENT_AND_REALTIME_SETUP.md)
+- [Slot booking implementation](docs/SLOT_BOOKING_IMPLEMENTATION.md)
+
+## Demo assets
+
+Product walkthrough videos are available in [`frontend/public/`](frontend/public/):
+
+- [LawConnect demo](frontend/public/lawconnect-demo.mp4)
+- [LawConnect product ad](frontend/public/lawconnect-ad.mp4)
+
+## Security notes
+
+- Keep Clerk secret keys, JWT secrets, MongoDB credentials, and Razorpay secrets on the server only.
+- Use test payment keys during development.
+- Do not treat the AI assistant as legal advice; it is a product feature for information and case summarization.
+- Review [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) before deploying.
+
+## License
+
+MIT
