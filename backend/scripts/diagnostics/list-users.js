@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import { User } from "./src/models/User.js";
-import { Lawyer } from "./src/models/Lawyer.js";
-import "./env.js";
+import { User } from "../../src/models/User.js";
+import { Lawyer } from "../../src/models/Lawyer.js";
+import "../../src/config/env.js";
 
 const listUsers = async () => {
   const mongoUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/lawconnect";

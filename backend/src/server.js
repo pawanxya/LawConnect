@@ -1,9 +1,9 @@
-import "./env.js";
+import "./config/env.js";
 import mongoose from "mongoose";
-import { app } from "./src/app.js";
-import { connectDB } from "./src/config/db.js";
-import { ensureSeedData } from "./src/seed/seedData.js";
-import { initializeSocket } from "./src/socket.js";
+import { app } from "./app.js";
+import { connectDB } from "./config/db.js";
+import { ensureSeedData } from "./seed/seedData.js";
+import { initializeSocket } from "./socket.js";
 
 const port = Number(process.env.PORT || 4000);
 

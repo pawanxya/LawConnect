@@ -3,18 +3,18 @@ import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
 import crypto from "node:crypto";
-import { db } from "./src/storage.js";
+import { db } from "./storage.js";
 import {
   process2DCardPayment,
   processUpiPayment,
   processNetBankingPayment,
   detectCardBrand
-} from "./src/processor.js";
-import { dispatchWebhook } from "./src/webhook.js";
+} from "./processor.js";
+import { dispatchWebhook } from "./webhook.js";
 
 const PORT = process.env.PORT || 5050;
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-const PUBLIC_DIR = path.join(__dirname, "public");
+const PUBLIC_DIR = path.join(__dirname, "../public");
 
 // Helper to send JSON responses
 function sendJson(res, statusCode, data) {

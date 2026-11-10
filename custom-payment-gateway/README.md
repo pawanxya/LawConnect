@@ -37,7 +37,7 @@ Because this prototype is built using **pure native Node.js (v18+) standard libr
 cd custom-payment-gateway
 
 # 2. Start the gateway server
-node server.js
+npm start
 ```
 
 The gateway will boot on port `5050`:
