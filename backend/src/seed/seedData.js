@@ -35,11 +35,73 @@ const ensureDefaultAdmin = async () => {
   });
 };
 
+// These accounts are available only in local development, so role-based flows
+// and real-time chat can be tested without creating three separate accounts.
+const ensureDevelopmentDemoAccounts = async () => {
+  if (process.env.NODE_ENV === "production") return;
+
+  const [clientHash, lawyerHash] = await Promise.all([
+    bcrypt.hash("client123", 10),
+    bcrypt.hash("lawyer123", 10),
+  ]);
+
+  let client = await User.findOne({ email: "client@example.com" });
+  if (!client) {
+    client = await User.create({
+      name: "Rahul Mehta",
+      email: "client@example.com",
+      role: "client",
+      avatar: getAvatar("Rahul Mehta"),
+      passwordHash: clientHash,
+      phone: "+91-9876543210",
+      location: "Mumbai, India",
+      membershipTier: "plus",
+    });
+  }
+
+  let lawyer = await Lawyer.findOne({ email: "lawyer@example.com" });
+  if (!lawyer) {
+    lawyer = await Lawyer.create({
+      name: "Sarah Johnson",
+      email: "lawyer@example.com",
+      role: "lawyer",
+      avatar: getAvatar("Sarah Johnson"),
+      passwordHash: lawyerHash,
+      verified: true,
+      membershipTier: "premium",
+      specialization: ["Criminal Law", "Family Law"],
+      experience: 8,
+      hourlyRate: 3500,
+      location: "Delhi, India",
+      phone: "+91-9988776655",
+      bio: "Experienced advocate available for criminal and family law consultations.",
+      consultationSlots: [],
+    });
+  }
+
+  const sharedBooking = await Booking.findOne({ clientId: client._id, lawyerId: lawyer._id });
+  if (!sharedBooking) {
+    await Booking.create({
+      clientId: client._id,
+      lawyerId: lawyer._id,
+      date: new Date().toISOString().slice(0, 10),
+      timeSlot: "10:00 AM - 11:00 AM",
+      status: "approved",
+      paymentStatus: "paid",
+      amount: 3500,
+      notes: "Local development consultation for chat testing.",
+      clientName: client.name,
+      lawyerName: lawyer.name,
+    });
+  }
+};
+
 const ensureSeedData = async () => {
   await ensureDefaultAdmin();
 
   const nonAdminUserCount = await User.countDocuments({ role: { $ne: "admin" } });
   if (nonAdminUserCount > 0) {
+    await ensureDevelopmentDemoAccounts();
     return;
   }
 
@@ -248,6 +310,7 @@ const ensureSeedData = async () => {
   ]);
 
   console.log("Seed data inserted successfully.");
+  await ensureDevelopmentDemoAccounts();
 };
 
 export { ensureDefaultAdmin, ensureSeedData };

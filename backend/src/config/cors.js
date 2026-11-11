@@ -16,7 +16,18 @@ const allowedOrigins = () => {
 export const corsOptions = {
   origin(origin, callback) {
     // Requests without an Origin header (health checks, server-to-server calls) are valid.
-    if (!origin || allowedOrigins().includes(origin)) return callback(null, true);
+    // Vite may use localhost, IPv6, or a LAN address while developing. Local
+    // development does not need production's strict browser-origin allowlist.
+    if (process.env.NODE_ENV !== "production") {
+      return callback(null, true);
+    }
+
+    if (
+      !origin ||
+      allowedOrigins().includes(origin)
+    ) {
+      return callback(null, true);
+    }
     return callback(new Error("Origin is not allowed by CORS."));
   },
   credentials: true,

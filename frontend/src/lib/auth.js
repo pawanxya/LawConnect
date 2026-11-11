@@ -4,7 +4,7 @@ const getDashboardPath = (role) => {
   }
 
   if (role === "admin") {
-    return "/admin/dashboard";
+    return "/admin/control-center";
   }
 
   return "/client/dashboard";

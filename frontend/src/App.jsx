@@ -3,7 +3,7 @@ import { Suspense, lazy } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import AppLoader from "@/components/AppLoader";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -97,10 +97,19 @@ const App = () => {
                     path="/admin/dashboard"
                     element={
                       <ProtectedRoute allowedRoles={["admin"]}>
+                        <Navigate to="/admin/control-center" replace />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/control-center"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin"]}>
                         <AdminDashboard />
                       </ProtectedRoute>
                     }
                   />
+                  <Route path="/admin" element={<Navigate to="/admin/control-center" replace />} />
                   <Route
                     path="/messages"
                     element={

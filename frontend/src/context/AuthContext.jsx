@@ -81,10 +81,16 @@ const AuthProvider = ({ children }) => {
   }, [clerkUser, isClerkLoaded]);
 
   const signin = useCallback(async (payload) => {
+    // A Clerk browser session takes priority in the sync effect. Clear it before
+    // using a local development account, otherwise a previously signed-in
+    // Clerk client can immediately replace the requested admin/lawyer session.
+    if (clerkUser && clerk) {
+      await clerk.signOut();
+    }
     const user = await loginUser(payload);
     setCurrentUser(user);
     return user;
-  }, []);
+  }, [clerk, clerkUser]);
 
   const logout = useCallback(async () => {
     try {
