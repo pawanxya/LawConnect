@@ -68,13 +68,19 @@ const toLawyerDto = (lawyer) => ({
   verified: lawyer.verified,
   reputationScore: lawyer.reputationScore,
   barId: lawyer.barId,
+  barCouncil: lawyer.barCouncil || "",
+  education: lawyer.education || "",
+  professionalBackground: lawyer.professionalBackground || "",
   availability: lawyer.availability,
   avatar: lawyer.avatar,
   isPriority: lawyer.isPriority,
   isSponsored: lawyer.isSponsored,
   services: (lawyer.services || []).map(s => ({ id: s._id?.toString(), name: s.name, fee: s.fee, description: s.description })),
   consultationSlots: (lawyer.consultationSlots || []).map(toSlotDto),
-  verificationStatus: lawyer.verified ? "verified" : "pending",
+  verificationStatus: lawyer.verified ? "approved" : (lawyer.verificationStatus || "draft"),
+  verificationSubmittedAt: lawyer.verificationSubmittedAt || null,
+  verificationReviewedAt: lawyer.verificationReviewedAt || null,
+  verificationNotes: lawyer.verificationNotes || "",
 });
 
 const toUserDto = (user) => ({
@@ -870,7 +876,7 @@ const getAdminOverview = async (_req, res) => {
     stats: {
       totalUsers: users.filter((u) => u.role === "client").length,
       totalLawyers: lawyers.filter((l) => l.verified).length,
-      pendingLawyers: lawyers.filter((l) => !l.verified).length,
+      pendingLawyers: lawyers.filter((l) => ["draft", "pending"].includes(l.verificationStatus || "draft")).length,
       totalTransactions: transactions.length,
       totalBookings: bookings.length,
       totalRevenue,
@@ -884,17 +890,41 @@ const getAdminOverview = async (_req, res) => {
     bookings: bookings.map(toBookingDto),
     transactions: transactions.map(toTransactionDto),
     cases: cases.map(toCaseDto),
+    // This endpoint is protected by the admin role.  Keeping the audit data
+    // here gives the control centre a read-only history for investigations.
+    messages: messages
+      .sort((a, b) => new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt))
+      .map(toMessageDto),
+    reviews: reviews
+      .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+      .map(toReviewDto),
   });
 };
 
 const updateLawyerVerification = async (req, res) => {
-  const { verified } = req.body;
+  const { verified, verificationNotes = "" } = req.body;
   const lawyer = await Lawyer.findById(req.params.id);
   if (!lawyer) {
     return res.status(404).json({ message: "Lawyer not found." });
   }
 
+  const missingFields = [
+    ["Bar ID", lawyer.barId],
+    ["Bar Council", lawyer.barCouncil],
+    ["education background", lawyer.education],
+    ["professional background", lawyer.professionalBackground],
+  ]
+    .filter(([, value]) => !String(value || "").trim())
+    .map(([label]) => label);
+
+  if (verified && missingFields.length) {
+    return res.status(400).json({ message: `Complete ${missingFields.join(", ")} before approving this lawyer.` });
+  }
+
   lawyer.verified = Boolean(verified);
+  lawyer.verificationStatus = verified ? "approved" : "rejected";
+  lawyer.verificationReviewedAt = new Date();
+  lawyer.verificationNotes = String(verificationNotes).trim();
   await lawyer.save();
 
   return res.status(200).json({ lawyer: toLawyerDto(lawyer.toObject()) });

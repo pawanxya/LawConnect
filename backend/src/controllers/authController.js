@@ -106,7 +106,7 @@ const me = async (req, res) => res.status(200).json({ user: await hydrateUser(re
 const logout = async (_req, res) => res.status(204).send();
 
 const updateMe = async (req, res) => {
-  const { name, phone, location, bio, avatar, email } = req.body;
+  const { name, phone, location, bio, avatar, email, barId, barCouncil, education, professionalBackground } = req.body;
   const role = req.user.role;
   const Model = role === "lawyer" ? Lawyer : User;
 
@@ -134,6 +134,42 @@ const updateMe = async (req, res) => {
   if (location !== undefined) user.location = location;
   if (bio !== undefined) user.bio = bio;
   if (avatar !== undefined) user.avatar = avatar;
+
+  if (role === "lawyer") {
+    let verificationWasEdited = false;
+    if (barId !== undefined) {
+      const normalizedBarId = String(barId).trim().toUpperCase();
+      if (!normalizedBarId) return res.status(400).json({ message: "Bar ID is required for lawyer verification." });
+      if (!/^[A-Z0-9][A-Z0-9/-]{4,49}$/.test(normalizedBarId)) {
+        return res.status(400).json({ message: "Enter a valid Bar ID using letters, numbers, hyphens, or slashes." });
+      }
+      verificationWasEdited ||= user.barId !== normalizedBarId;
+      user.barId = normalizedBarId;
+    }
+    if (barCouncil !== undefined) {
+      const value = String(barCouncil).trim();
+      verificationWasEdited ||= user.barCouncil !== value;
+      user.barCouncil = value;
+    }
+    if (education !== undefined) {
+      const value = String(education).trim();
+      verificationWasEdited ||= user.education !== value;
+      user.education = value;
+    }
+    if (professionalBackground !== undefined) {
+      const value = String(professionalBackground).trim();
+      verificationWasEdited ||= user.professionalBackground !== value;
+      user.professionalBackground = value;
+    }
+
+    if (verificationWasEdited) {
+      user.verified = false;
+      user.verificationStatus = "pending";
+      user.verificationSubmittedAt = new Date();
+      user.verificationReviewedAt = null;
+      user.verificationNotes = "";
+    }
+  }
 
   await user.save();
   return res.status(200).json({ user: await hydrateUser(user) });

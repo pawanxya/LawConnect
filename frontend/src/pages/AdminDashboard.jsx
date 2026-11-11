@@ -79,6 +79,8 @@ const AdminDashboard = () => {
     () => overview?.transactions || [],
     [overview?.transactions],
   );
+  const messages = useMemo(() => overview?.messages || [], [overview?.messages]);
+  const reviews = useMemo(() => overview?.reviews || [], [overview?.reviews]);
 
   const consultationTransactions = useMemo(
     () => transactions.filter(t => String(t.caseTitle).startsWith("Consultation on ")),
@@ -108,7 +110,7 @@ const AdminDashboard = () => {
   }, [transactions]);
 
   const pendingLawyers = useMemo(
-    () => lawyers.filter((lawyer) => !lawyer.verified),
+    () => lawyers.filter((lawyer) => ["draft", "pending"].includes(lawyer.verificationStatus || "draft")),
     [lawyers],
   );
 
@@ -248,9 +250,9 @@ const AdminDashboard = () => {
       <div className="flex-1">
         <div className="gradient-primary py-8">
           <div className="container mx-auto px-4">
-            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold text-white">Admin Control Center</h1>
             <p className="text-white/80">
-              Manage users, lawyer verification, disputes, and platform revenue.
+              Review platform activity, approve lawyers, resolve disputes, and manage records.
             </p>
           </div>
         </div>
@@ -314,7 +316,7 @@ const AdminDashboard = () => {
           </div>
 
           <Tabs defaultValue="users" className="w-full">
-            <TabsList>
+            <TabsList className="h-auto w-full justify-start overflow-x-auto">
               <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="bookings">Bookings</TabsTrigger>
               <TabsTrigger value="verification" className="relative flex items-center gap-2">
@@ -328,6 +330,7 @@ const AdminDashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="disputes">Disputes</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="activity">Activity History</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
@@ -391,8 +394,8 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                          <Badge variant={lawyer.verified ? "default" : "secondary"}>
-                            {lawyer.verified ? "Verified" : "Pending"}
+                          <Badge variant={lawyer.verified ? "default" : lawyer.verificationStatus === "rejected" ? "destructive" : "secondary"} className="capitalize">
+                            {lawyer.verified ? "Verified" : (lawyer.verificationStatus || "pending")}
                           </Badge>
                           <Button
                             size="sm"
@@ -536,9 +539,9 @@ const AdminDashboard = () => {
                             </div>
                           </div>
                           <div className="flex gap-2 flex-wrap">
-                            <Button size="sm" onClick={() => handleVerifyLawyer(lawyer.id, true)}>
+                            <Button size="sm" disabled={!lawyer.barId || !lawyer.barCouncil || !lawyer.education || !lawyer.professionalBackground} onClick={() => handleVerifyLawyer(lawyer.id, true)}>
                               <CheckCircle className="h-4 w-4 mr-2" />
-                              Verify
+                              Approve Bar ID
                             </Button>
                             <Button
                               size="sm"
@@ -546,7 +549,7 @@ const AdminDashboard = () => {
                               onClick={() => handleVerifyLawyer(lawyer.id, false)}
                             >
                               <XCircle className="h-4 w-4 mr-2" />
-                              Keep Pending
+                              Reject Verification
                             </Button>
                             <Button
                               size="sm"
@@ -555,6 +558,12 @@ const AdminDashboard = () => {
                             >
                               Remove Lawyer
                             </Button>
+                          </div>
+                          <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                            <p>Bar ID: {lawyer.barId || "Not submitted"}</p>
+                            <p>Bar Council: {lawyer.barCouncil || "Not submitted"}</p>
+                            <p>Education: {lawyer.education || "Not submitted"}</p>
+                            <p>Professional background: {lawyer.professionalBackground || "Not submitted"}</p>
                           </div>
                           {lawyer.consultationSlots?.length ? (
                             <div className="mt-4 space-y-2">
@@ -647,6 +656,34 @@ const AdminDashboard = () => {
             </TabsContent>
 
             <TabsContent value="transactions" className="mt-6 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Complete Transaction History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {transactions.length === 0 ? (
+                    <p className="text-muted-foreground">No transactions recorded yet.</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[28rem] overflow-y-auto pr-1">
+                      {transactions.map((transaction) => (
+                        <div key={transaction.id} className="flex items-center justify-between gap-4 p-3 border rounded-lg">
+                          <div>
+                            <p className="font-medium">{transaction.caseTitle}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {transaction.clientName || "Platform"}{transaction.lawyerName ? ` to ${transaction.lawyerName}` : ""}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{transaction.paidAt || "Payment date unavailable"} · {transaction.method || "Online"}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">{formatCurrency(transaction.amount)}</p>
+                            <Badge variant={transaction.status === "disputed" ? "destructive" : "secondary"} className="mt-1 capitalize">{transaction.status}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
               <Card>
                 <CardHeader>
                   <CardTitle>Subscription Purchases (Platform Revenue)</CardTitle>
@@ -752,6 +789,54 @@ const AdminDashboard = () => {
                       ))
                     )}
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="activity" className="mt-6 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Conversation History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {messages.length === 0 ? (
+                    <p className="text-muted-foreground">No messages recorded yet.</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[28rem] overflow-y-auto pr-1">
+                      {messages.map((message) => (
+                        <div key={message.id} className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between gap-4 text-sm">
+                            <p className="font-medium">{message.senderName || "User"}</p>
+                            <p className="text-muted-foreground">{message.timestamp || ""}</p>
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">{message.content || "Attachment shared"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Client Reviews</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {reviews.length === 0 ? (
+                    <p className="text-muted-foreground">No reviews recorded yet.</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[24rem] overflow-y-auto pr-1">
+                      {reviews.map((review) => (
+                        <div key={review.id} className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between gap-4">
+                            <p className="font-medium">{review.clientName || "Client"}</p>
+                            <Badge variant="secondary">{review.rating}/5</Badge>
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">{review.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

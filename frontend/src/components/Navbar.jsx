@@ -21,7 +21,7 @@ const getPrimaryNavLinks = (role) => {
 
   if (role === "admin") {
     return [
-      { to: "/admin/dashboard", label: "Dashboard" },
+      { to: "/admin/control-center", label: "Control Center" },
     ];
   }
 

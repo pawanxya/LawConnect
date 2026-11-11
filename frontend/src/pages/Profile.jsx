@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -69,6 +70,10 @@ const Profile = () => {
     name: currentUser?.name || "",
     phone: currentUser?.phone || "",
     location: currentUser?.location || "",
+    barId: currentUser?.barId || "",
+    barCouncil: currentUser?.barCouncil || "",
+    education: currentUser?.education || "",
+    professionalBackground: currentUser?.professionalBackground || "",
   });
   const [credentialsData, setCredentialsData] = useState({
     email: currentUser?.email || "",
@@ -86,6 +91,10 @@ const Profile = () => {
       name: currentUser?.name || "",
       phone: currentUser?.phone || "",
       location: currentUser?.location || "",
+      barId: currentUser?.barId || "",
+      barCouncil: currentUser?.barCouncil || "",
+      education: currentUser?.education || "",
+      professionalBackground: currentUser?.professionalBackground || "",
     });
     setCredentialsData((prev) => ({
       ...prev,
@@ -274,6 +283,48 @@ const Profile = () => {
                     }
                   />
                 </div>
+                {currentUser.role === "lawyer" ? (
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                    <Label htmlFor="bar-id">Bar ID verification</Label>
+                    <Input
+                      id="bar-id"
+                      className="mt-2"
+                      placeholder="Example: DL-BAR-2015-4821"
+                      value={formData.barId}
+                      onChange={(e) => setFormData({ ...formData, barId: e.target.value })}
+                    />
+                    <Label htmlFor="bar-council" className="mt-4 block">State Bar Council</Label>
+                    <Input
+                      id="bar-council"
+                      className="mt-2"
+                      placeholder="Example: Bar Council of Delhi"
+                      value={formData.barCouncil}
+                      onChange={(e) => setFormData({ ...formData, barCouncil: e.target.value })}
+                    />
+                    <Label htmlFor="education" className="mt-4 block">Educational background</Label>
+                    <Textarea
+                      id="education"
+                      className="mt-2"
+                      placeholder="Example: LL.B., University name, year of graduation; LL.M. if applicable"
+                      value={formData.education}
+                      onChange={(e) => setFormData({ ...formData, education: e.target.value })}
+                    />
+                    <Label htmlFor="professional-background" className="mt-4 block">Professional background</Label>
+                    <Textarea
+                      id="professional-background"
+                      className="mt-2"
+                      placeholder="Describe your court practice, areas of work, and relevant professional experience."
+                      value={formData.professionalBackground}
+                      onChange={(e) => setFormData({ ...formData, professionalBackground: e.target.value })}
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Submitting or changing your Bar ID sends your profile for admin approval. Restricted lawyer tools unlock only after approval.
+                    </p>
+                    <p className="mt-1 text-xs font-medium">
+                      Status: {currentUser.verified ? "Approved" : (currentUser.verificationStatus || "Draft")}
+                    </p>
+                  </div>
+                ) : null}
                 <Button type="submit" className="w-full">
                   Save Profile
                 </Button>
